@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Expense Manager</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f0f2f5;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+    }
+
+    .container {
+        background: #fff;
+        padding: 20px;
+        width: 420px;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    h2, h3 {
+        text-align: center;
+        margin-bottom: 10px;
+    }
+
+    input, select, button {
+        width: 100%;
+        padding: 8px;
+        margin: 6px 0;
+    }
+
+    button {
+        background: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background: #0056b3;
+    }
+
+    ul {
+        list-style: none;
+        padding: 0;
+        max-height: 140px;
+        overflow-y: auto;
+    }
+
+    li {
+        background: #f4f4f4;
+        padding: 6px;
+        margin: 5px 0;
+        display: flex;
+        justify-content: space-between;
+        font-size: 14px;
+    }
+
+    .delete {
+        color: red;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    .summary {
+        font-weight: bold;
+        margin-top: 10px;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>Expense Manager</h2>
+
+    <input type="number" id="income" placeholder="Enter Monthly Income">
+
+    <input type="text" id="expenseName" placeholder="Expense Name">
+
+    <input type="number" id="expenseAmount" placeholder="Expense Amount">
+
+    <select id="category">
+        <option value="">Select Category</option>
+        <option>Food</option>
+        <option>Rent</option>
+        <option>Transport</option>
+        <option>Shopping</option>
+        <option>Entertainment</option>
+        <option>Other</option>
+    </select>
+
+    <button onclick="addExpense()">Add Expense</button>
+
+    <h3>Expenses</h3>
+    <ul id="expenseList"></ul>
+
+    <div class="summary">
+        <p>Total Expenses: ₹<span id="totalExpense">0</span></p>
+        <p>Savings: ₹<span id="savings">0</span></p>
+    </div>
+
+    <h3>Category Summary</h3>
+    <ul id="categorySummary"></ul>
+</div>
+
+<script>
+let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
+let income = localStorage.getItem("income") || 0;
+
+document.getElementById("income").value = income;
+renderExpenses();
+
+document.getElementById("income").addEventListener("input", function() {
+    income = Number(this.value);
+    localStorage.setItem("income", income);
+    renderExpenses();
+});
+
+function addExpense() {
+    const name = expenseName.value;
+    const amount = Number(expenseAmount.value);
+    const category = document.getElementById("category").value;
+
+    if (!name || !amount || !category || !income) {
+        alert("Please fill all fields");
+        return;
+    }
+
+    expenses.push({ name, amount, category });
+    localStorage.setItem("expenses", JSON.stringify(expenses));
+
+    expenseName.value = "";
+    expenseAmount.value = "";
+    category.value = "";
+
+    renderExpenses();
+}
+
+function deleteExpense(index) {
+    expenses.splice(index, 1);
+    localStorage.setItem("expenses", JSON.stringify(expenses));
+    renderExpenses();
+}
+
+function renderExpenses() {
+    const list = document.getElementById("expenseList");
+    const summaryList = document.getElementById("categorySummary");
+    list.innerHTML = "";
+    summaryList.innerHTML = "";
+
+    let total = 0;
+    let categoryTotals = {};
+
+    expenses.forEach((exp, index) => {
+        total += exp.amount;
+        categoryTotals[exp.category] = (categoryTotals[exp.category] || 0) + exp.amount;
+
+        const li = document.createElement("li");
+        li.innerHTML = `
+            ${exp.name} (${exp.category}) - ₹${exp.amount}
+            <span class="delete" onclick="deleteExpense(${index})">X</span>
+        `;
+        list.appendChild(li);
+    });
+
+    totalExpense.innerText = total;
+    savings.innerText = income - total;
+
+    for (let cat in categoryTotals) {
+        const li = document.createElement("li");
+        li.textContent = `${cat}: ₹${categoryTotals[cat]}`;
+        summaryList.appendChild(li);
+    }
+}
+</script>
+
+</body>
+</html>
